@@ -1,0 +1,11 @@
+{
+  "name": "fpop",
+  "description": "A local FZF-motivated utility",
+  "author": "Alex Davis",
+  "dependencies": {
+    "maktaba": {
+      "type": "git",
+      "url": "git://github.com/google/maktaba"
+    }
+  }
+}

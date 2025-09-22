@@ -1,0 +1,127 @@
+*fpop.txt*	A local FZF-motivated utility
+Alex Davis                                                              *fpop*
+
+==============================================================================
+CONTENTS                                                       *fpop-contents*
+  1. Introduction.................................................|fpop-intro|
+  2. Configuration...............................................|fpop-config|
+  3. Commands..................................................|fpop-commands|
+  4. Functions................................................|fpop-functions|
+      1. Picker Options..................................|fpop-picker-options|
+
+==============================================================================
+INTRODUCTION                                                      *fpop-intro*
+
+This is a plugin for FZF-related utilities and workflows that integrate well
+with both custom workflows and with some prefab FZF workflows.
+
+==============================================================================
+CONFIGURATION                                                    *fpop-config*
+
+fpop is configured using maktaba flags. It defines a |fpop:name| flag that can
+be configured using |Glaive| or a plugin manager that uses the maktaba setting
+API. It also supports entirely disabling commands from being defined by
+clearing the plugin[commands] flag.
+
+                                                      *fpop:path_restrictions*
+The regexes in this flag will limit matching paths for OldFiles to only paths
+that match entries in this list.
+
+An empty list results in no restrictions.
+Default: [] `
+
+                                                           *fpop:path_filters*
+The regexes in this list will prune the remaining files that already matched
+the [path_restrictions] flag.
+Default: ["^/tmp", "^/usr/share/vim"] `
+
+                                                            *fpop:filter_func*
+If provided, this will be a Funcref that returns a list of additional filters
+to be used.
+Default: 'fpop#VcsRoot' `
+
+                                                               *fpop:fzf_args*
+Additional arguments provided to FZF.
+Default: ["--reverse", "--cycle"] `
+
+                                                       *fpop:plugin[commands]*
+Configures whether plugin/commands.vim should be loaded.
+Default: 1 `
+
+                                                       *fpop:plugin[mappings]*
+Configures whether plugin/mappings.vim should be loaded.
+Default: 0 `
+
+==============================================================================
+COMMANDS                                                       *fpop-commands*
+
+:OldFiles                                                          *:OldFiles*
+  Provides insight into recently opened files by vim.  This is effectively an
+  fzf-equivalent to ViM's built-in |:oldfiles| command.
+
+  Flags can be provided that attempt to limit the parsed flags to the current
+  VCS/SCM pathing.
+
+:Buffers                                                            *:Buffers*
+  Provides fzf selection of currently loaded buffers.  Only listed buffers are
+  shown.
+
+==============================================================================
+FUNCTIONS                                                     *fpop-functions*
+
+Functions for fpop
+
+fpop#OpenCallback({lines})                               *fpop#OpenCallback()*
+  A generic callback that opens the first file referred to by {lines}.
+
+fpop#FileCallback({lines})                               *fpop#FileCallback()*
+  A callback for file version-controlled files.
+
+  There are only two {lines} expected when called for this callback.  The
+  first line is the "--expect" line from FZF output.  The second line is the
+  name of the selected entry.  These two elements combined allow this callback
+  to synchronize with the FZF invocation to react properly to the selection
+  key for different selection behaviors.
+
+fpop#Picker({content}, [options])                              *fpop#Picker()*
+  A utility method that can be called by custom user workflows or
+  fpop-internal workflows alike.  The method requires input {content} as well
+  as an optional dictionary of [options].
+
+  [options] takes the form of |picker-options|
+
+  In the event that the picker output has no output lines, no user callback
+  will be invoked.
+
+fpop#FilePicker({files})                                   *fpop#FilePicker()*
+  A specialized version of |Picker| that specifically handles a single file
+  with options for splitting, diffing, etc.
+
+fpop#Buffers()                                                *fpop#Buffers()*
+  Allows the current visible buffers to be selected with FZF.
+
+fpop#OldFiles()                                              *fpop#OldFiles()*
+  The allows the last previous 100 open files within vim to be selected.
+
+  This method will filter out files matching 'tmp' before sharing the methods
+  with the provided callback.
+
+==============================================================================
+PICKER OPTIONS                                           *fpop-picker-options*
+
+
+When invoking the picker, different options are available that manipulate the
+behavior of the picker
+
+callback (required)
+
+A mandatory callback function that will be invoked with the stdout generated
+by the FZF command.
+
+fzf_args (optional)
+
+These are additional arguments that will be provided to FZF for this specific
+invocation
+
+
+vim:tw=78:ts=8:ft=help:norl:
