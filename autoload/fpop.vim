@@ -160,8 +160,8 @@ function! fpop#Picker(content, ...)
           \hidden: 1,
       \})
 
-  let l:winwidth = float2nr(str2float(winwidth(0)) * 0.8)
-  let l:winheight = float2nr(str2float(winheight(0)) * 0.8)
+  let l:winwidth = float2nr(&columns * 0.8)
+  let l:winheight = float2nr(&lines * 0.8)
 
   let winid = popup_create(s:term_buf, #{
         \minwidth: l:winwidth,
