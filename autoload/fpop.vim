@@ -31,7 +31,16 @@ function! fpop#PickerCallback(channel, message)
   call popup_close(win_getid())
 
   call term_wait(s:term_buf)
+
+  " Oddly, if your popup terminal is too narrow (i.e. not enough columns in the
+  " popup terminal), then the output will get spit to stdout with line wrapping.
+  " This means that the output buffer will end up with multiple lines instead of
+  " just one for a single selection.  We combat this by enabling `--print0` when
+  " invoking fzf, and then we join all lines here and then split them again on
+  " the null character.
   let lines = getbufline(s:term_buf, 1, "$")
+        \->join('')
+        \->split('\0')
 
   exec ':bwipeout! ' .. s:fpop_buf
   exec ':bwipeout! ' .. s:term_buf
@@ -70,6 +79,7 @@ function! fpop#FileCallback(lines)
   let [action, file ; rest] = a:lines[:2]
 
   echomsg 'File Callback: {' .. l:action .. ', ' .. l:file .. '}'
+  call s:plugin.logger.Debug('File Callback: {' .. l:action .. ', ' .. l:file .. '}')
 
   if l:action == 'enter'
     execute 'edit ' .. l:file
@@ -149,9 +159,8 @@ function! fpop#Picker(content, ...)
 
   let s:picker_user_callback = get(l:options, 'callback', function('fpop#OpenCallback'))
 
-  let s:term_buf = term_start(['fzf', 
-          \'--border=double',
-        \] + s:plugin.Flag('fzf_args') + get(l:options, 'fzf_args', []),
+  let s:term_buf = term_start(['fzf', '--print0', '--border=double']
+        \+ s:plugin.Flag('fzf_args') + get(l:options, 'fzf_args', []),
         \#{
           \exit_cb: 'fpop#PickerCallback',
           \term_name: 'fzf_term',
@@ -235,7 +244,7 @@ function! fpop#OldFiles()
   call fpop#Picker(
       \l:path_values,
       \#{
-        \fzf_args: ["--preview=bash -c 'cat {}'"],
+        \fzf_args: ["--preview=bash -c 'cat {}'", "--preview-window=bottom"],
         \callback: function('fpop#OpenCallback')
       \}
     \)
