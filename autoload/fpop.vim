@@ -70,15 +70,15 @@ endfunction
 " @public
 " A callback for file version-controlled files.
 "
-" There are only two {lines} expected when called for this callback.  The
-" first line is the "--expect" line from FZF output.  The second line is the
-" name of the selected entry.  These two elements combined allow this callback
-" to synchronize with the FZF invocation to react properly to the selection
-" key for different selection behaviors.
+" each entry from FZF is a null-terminated entry.  This callback comes from an
+" invocation that uses '--expect' to indicate what action to take with the
+" selected content.  This function expects two major elements in the provided
+" line, the action, and everything else. The action will indicate how to handle
+" the provided file, and then fhe file will be the recipient of that action.
 function! fpop#FileCallback(lines)
-  let [action, file ; rest] = a:lines[:2]
+  let [action ; rest] = split(a:lines[0])
+  let file = join(rest, ' ')
 
-  echomsg 'File Callback: {' .. l:action .. ', ' .. l:file .. '}'
   call s:plugin.logger.Debug('File Callback: {' .. l:action .. ', ' .. l:file .. '}')
 
   if l:action == 'enter'
