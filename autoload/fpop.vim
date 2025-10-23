@@ -40,7 +40,7 @@ function! fpop#PickerCallback(channel, message)
   " the null character.
   let lines = getbufline(s:term_buf, 1, "$")
         \->join('')
-        \->split('\0')
+        \->split('\x00')
 
   exec ':bwipeout! ' .. s:fpop_buf
   exec ':bwipeout! ' .. s:term_buf
