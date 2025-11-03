@@ -49,7 +49,7 @@ function! fpop#PickerCallback(channel, message)
   " ViM will return an empty buffer with a single line if no selection was
   " made.  We prune that out to avoid calling the user callback if no
   " selection was made.
-  if len(l:lines) == 1 && empty(l:lines[0])
+  if empty(l:lines) || (len(l:lines) == 1 && empty(l:lines[0]))
     " Nothing to do if no selection was made.
     return
   endif
