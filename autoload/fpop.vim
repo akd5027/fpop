@@ -244,7 +244,9 @@ function! fpop#OldFiles()
   call fpop#Picker(
       \l:path_values,
       \#{
-        \fzf_args: ["--preview=bash -c 'cat {}'", "--preview-window=bottom"],
+        \fzf_args: [
+          \"--preview", "bash -c 'batcat {}'", 
+          \"--preview-window", "bottom"],
         \callback: function('fpop#OpenCallback')
       \}
     \)
