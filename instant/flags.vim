@@ -14,6 +14,10 @@ endif
 " that can be configured using |Glaive| or a plugin manager that uses the
 " maktaba setting API. It also supports entirely disabling commands from being
 " defined by clearing the plugin[commands] flag.
+" 
+" When possible, lists of flags are preferred over full strings so that
+" empty arguments and joined arguments can be handled without creating parsing
+" syntax complications with empty flag lists.
 
 ""
 " The regexes in this flag will limit matching paths for OldFiles to only
@@ -36,3 +40,18 @@ call s:plugin.Flag('filter_func', 'fpop#VcsRoot')
 ""
 " Additional arguments provided to FZF.
 call s:plugin.Flag('fzf_args', ["--reverse", "--cycle"])
+
+""
+" The command use when previewing a file.
+"
+" The FZF argument `{}` is implicitly appended to these command elements.  All
+" command elements are joined with a whitespace separator.
+call s:plugin.Flag('file_preview', ['cat', '{}'])
+
+""
+" Determines if the Fpop splits occur vertically or horizonally.
+" Allowable values include:
+"
+" Vertical split results in a side-by-side preview, while a horizontal split
+" results in a top-and-bottom preview.
+call s:plugin.Flag('file_preview_window', [])

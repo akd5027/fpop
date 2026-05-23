@@ -23,6 +23,10 @@ be configured using |Glaive| or a plugin manager that uses the maktaba setting
 API. It also supports entirely disabling commands from being defined by
 clearing the plugin[commands] flag.
 
+When possible, lists of flags are preferred over full strings so that empty
+arguments and joined arguments can be handled without creating parsing syntax
+complications with empty flag lists.
+
                                                       *fpop:path_restrictions*
 The regexes in this flag will limit matching paths for OldFiles to only paths
 that match entries in this list.
@@ -43,6 +47,21 @@ Default: 'fpop#VcsRoot' `
                                                                *fpop:fzf_args*
 Additional arguments provided to FZF.
 Default: ["--reverse", "--cycle"] `
+
+                                                           *fpop:file_preview*
+The command use when previewing a file.
+
+The FZF argument `{}` is implicitly appended to these command elements.  All
+command elements are joined with a whitespace separator.
+Default: ['cat', '{}'] `
+
+                                                    *fpop:file_preview_window*
+Determines if the Fpop splits occur vertically or horizonally. Allowable
+values include:
+
+Vertical split results in a side-by-side preview, while a horizontal split
+results in a top-and-bottom preview.
+Default: [] `
 
                                                        *fpop:plugin[commands]*
 Configures whether plugin/commands.vim should be loaded.
@@ -74,7 +93,7 @@ Functions for fpop
 fpop#OpenCallback({lines})                               *fpop#OpenCallback()*
   A generic callback that opens the first file referred to by {lines}.
 
-fpop#FileCallback({lines})                               *fpop#FileCallback()*
+fpop#FileCallback({extra_callback}, {lines})             *fpop#FileCallback()*
   A callback for file version-controlled files.
 
   each entry from FZF is a null-terminated entry.  This callback comes from an
@@ -94,7 +113,7 @@ fpop#Picker({content}, [options])                              *fpop#Picker()*
   In the event that the picker output has no output lines, no user callback
   will be invoked.
 
-fpop#FilePicker({files})                                   *fpop#FilePicker()*
+fpop#FilePicker({files}, {options})                        *fpop#FilePicker()*
   A specialized version of |Picker| that specifically handles a single file
   with options for splitting, diffing, etc.
 

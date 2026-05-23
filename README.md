@@ -28,6 +28,30 @@ includes at least a callback function that you can use to process the selection.
 A few default selection mechanisms exist within `fpop` for you already that know
 how to select output.
 
---------------------------------------------------------------------------------
+## Glaive
+
+Glaive can be used to opt-in to default Aikido mappings and can personalize flags.  In order to include the default Aikido mappings 
+
+### Setting up Glaive
+
+In short, you will add
+
+```vim
+<PluginManager> 'google/vim-glaive'
+
+"""
+" Conclude plugin manager.
+"""
+
+" Ensure Glaive is installed
+call glaive#Install()
+```
+
+### Basic Configuration
+
+```vim
+" Using batcat instead of 'cat' for file previews with colors.
+Glaive fpop file_preview=`['batcat', '--plain', '--color=always', '{}']`
+```
 
 See more help with `:help fpop`

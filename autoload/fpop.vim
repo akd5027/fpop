@@ -22,6 +22,17 @@ let s:plugin = maktaba#plugin#Get('fpop')
 " specific invocation
 
 ""
+" Options used to indicate how a file-selection callback should behave once an
+" action is requested for a selected file.
+"
+" enter  - Opens the selected file
+" ctrl-s - Splits the selected file in-place of the current buffer
+let s:file_options = {
+      \'enter':  'open',
+      \'ctrl-s': 'split',
+    \}
+
+""
 " Follows the typical callback mandats of job-start, the {channel} arguments
 " provides information about the callback channel.  The {message} provides
 " information about the callback status.  This is a terminal callback though,
@@ -75,7 +86,7 @@ endfunction
 " selected content.  This function expects two major elements in the provided
 " line, the action, and everything else. The action will indicate how to handle
 " the provided file, and then fhe file will be the recipient of that action.
-function! fpop#FileCallback(lines)
+function! fpop#FileCallback(extra_callback, lines) abort
   let [action ; rest] = split(a:lines[0])
   let file = join(rest, ' ')
 
@@ -85,11 +96,10 @@ function! fpop#FileCallback(lines)
     execute 'edit ' .. l:file
   elseif l:action == 'ctrl-s'
     execute 'vertical split ' .. l:file
-  elseif l:action == 'ctrl-v'
-    execute 'edit ' .. l:file
-    AKVdiff
-  else
-    call s:plugin.logger.Error('Unknown file callback action: ' .. l:action)
+  elseif a:extra_callback isnot v:null
+    if a:extra_callback(l:action, l:file) == v:false
+      throw 'Could not handle callback'
+    endif
   endif
 endfunction
 
@@ -179,14 +189,62 @@ function! fpop#Picker(content, ...)
 endfunction
 
 ""
+" @private
+" Combines all keys and values of {dict} into a list.  Each list entry is a
+" space-separated combination of the keys and values of {dict}.
+function! s:combine(dict)
+  let ret = []
+  for [key, val] in items(a:dict)
+    call add(l:ret, l:key .. ' ' .. l:val)
+  endfor
+
+  return l:ret
+endfunction
+
+""
+" @private
+" Used to create a CLI flag for FPOP invocation.
+"
+" The {flag} will be prefixed with '--' and will then conditionally be
+" followed by the [value_list] if the [value_list] is provided.  
+"
+" The optional [options] dictionary can provide additional behaviors with
+" certain keys.  All keys of the [options] dictionary are strings.  The
+" allowable entries in the [options] dictionary are:
+"
+"  omit_if_empty - Defaults to |v:true|.  If set to |v:false| then an empty
+"                  [value_list] will result in only '--<flag>' being returned.
+"  join_with     - Defaults to ',', this is the string to join all entries
+"                  from the [value_list] with.
+function! s:cli_flag(flag, value_list = [], options = {}) " {{{
+  if empty(a:value_list) && get(a:options, 'omit_if_empty', v:true)
+    return []
+  endif
+
+  let value_join = a:options->get('join_with', ',')
+  return add(
+        \['--' .. a:flag],
+        \a:value_list->join(l:value_join)
+      \)
+endfunction
+" }}}
+
+""
 " @public
 " A specialized version of |Picker| that specifically handles a single file
 " with options for splitting, diffing, etc.
-function! fpop#FilePicker(files)
+function! fpop#FilePicker(files, options = {})
+
+  let file_options = get(a:options, 'extra_options', {})->extend(s:file_options)
+
   call fpop#Picker(a:files, #{
-        \fzf_args: ['--expect=enter,ctrl-s,ctrl-v', '--header=Open (enter) | Split (^s) | VDiff (^v)'],
-        \callback: function('fpop#FileCallback')
-        \})
+        \fzf_args: ['--exact', '--ansi'] +
+          \s:cli_flag('header', s:combine(l:file_options), {'join_with': ' | '}) +
+          \s:cli_flag('preview', s:plugin.Flag('file_preview'), {'join_with': ' '}) +
+          \s:cli_flag('preview-window', s:plugin.Flag('file_preview_window')) +
+          \s:cli_flag('expect', keys(l:file_options)),
+        \callback: function('fpop#FileCallback', [get(a:options, 'extra_callback', v:null)])
+      \})
 
 endfunction
 
@@ -244,7 +302,9 @@ function! fpop#OldFiles()
   call fpop#Picker(
       \l:path_values,
       \#{
-        \fzf_args: ["--preview=bash -c 'cat {}'", "--preview-window=bottom"],
+        \fzf_args: ['--exact', '--ansi'] +
+          \s:cli_flag('preview', s:plugin.Flag('file_preview'), {'join_with': ' '}) +
+          \s:cli_flag('preview-window', s:plugin.Flag('file_preview_window')),
         \callback: function('fpop#OpenCallback')
       \}
     \)
